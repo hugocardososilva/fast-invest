@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Assistente BTG</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main>
+    <header>
+      <span class="eyebrow">POC assistida</span>
+      <h1>Analisar investimentos</h1>
+      <p>A confirmação da operação permanece sempre no portal e sob controle do usuário.</p>
+    </header>
+
+    <form id="preferences">
+      <label>Valor disponível
+        <span class="money"><span>R$</span><input id="amount" name="amount" type="number" min="0" step="0.01" value="10000" required></span>
+      </label>
+      <div class="grid">
+        <label>Produto
+          <select id="productType" name="productType">
+            <option value="QUALQUER">Qualquer</option><option>CDB</option><option>LCI</option><option>LCA</option><option>CRI</option><option>CRA</option>
+          </select>
+        </label>
+        <label>Indexador
+          <select id="indexer" name="indexer">
+            <option value="CDI">CDI</option><option value="IPCA+">IPCA+</option><option value="PREFIXADO">Prefixado</option><option value="QUALQUER">Qualquer*</option>
+          </select>
+        </label>
+      </div>
+      <div class="grid">
+        <label>Taxa mínima (%)<input id="minRate" name="minRate" type="number" min="0" step="0.01" placeholder="Opcional"></label>
+        <label>Prazo máximo (dias)<input id="maxMaturityDays" name="maxMaturityDays" type="number" min="1" step="1" placeholder="Opcional"></label>
+      </div>
+      <label>Liquidez
+        <select id="liquidity" name="liquidity"><option value="QUALQUER">Qualquer</option><option value="DIARIA">Somente diária</option></select>
+      </label>
+      <label>Emissores excluídos<input id="excludedIssuers" name="excludedIssuers" type="text" placeholder="Separe por vírgulas"></label>
+      <small>* Taxas de indexadores diferentes não são diretamente comparáveis.</small>
+      <button class="analyze" type="submit">Analisar página atual</button>
+    </form>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>
