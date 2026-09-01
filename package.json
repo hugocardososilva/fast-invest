@@ -1,6 +1,6 @@
 {
   "name": "btg-assisted-investment-poc",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "POC de extensão para automação assistida de investimentos",
   "scripts": {

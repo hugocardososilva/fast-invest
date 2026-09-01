@@ -1,15 +1,20 @@
 # POC — Assistente de investimentos
 
-Extensão Chromium Manifest V3 para demonstrar um fluxo de automação assistida: ler produtos exibidos em uma página, aplicar critérios determinísticos, explicar o ranking, destacar uma opção e preencher o valor. A extensão **não confirma operações**.
+Extensão Chromium Manifest V3 que funciona como um booster de oportunidades: monitora os produtos exibidos, aplica critérios previamente definidos, seleciona a melhor alternativa, preenche o valor e avança automaticamente até a confirmação humana. A extensão **não digita token nem confirma operações**.
 
 ## O que a POC demonstra
 
-- leitura de cards de CDB, LCI, LCA e produtos semelhantes;
+- monitoramento contínuo dos cards de CDB, LCI, LCA e produtos semelhantes;
 - normalização de taxa, indexador, emissor, vencimento, investimento mínimo e liquidez;
 - filtros por valor, produto, indexador, taxa, prazo, liquidez e emissores;
 - classificação com justificativas para itens excluídos;
-- destaque visual do produto selecionado;
-- tentativa conservadora de preenchimento do campo de valor;
+- seleção automática da oportunidade mais bem classificada;
+- destaque e preenchimento automático do valor;
+- navegação automática até a tela de confirmação no simulador;
+- revalidação de produto, emissor, taxa e valor na revisão;
+- tolerância configurável para eventual queda da taxa;
+- interrupção em caso de mudança, indisponibilidade ou falha de navegação;
+- alerta visual quando a confirmação humana for necessária;
 - preferências salvas localmente pelo navegador;
 - interrupção antes de qualquer confirmação financeira.
 
@@ -27,20 +32,20 @@ Extensão Chromium Manifest V3 para demonstrar um fluxo de automação assistida
 5. Abra `http://localhost:8080/demo/investments.html`.
 6. Entre no ambiente fictício e abra **Investimentos**.
 7. Selecione o cenário que deseja validar.
-8. Abra a extensão, ajuste os critérios e clique em **Analisar página atual**.
-9. No painel lateral, use **Destacar** ou **Preparar aplicação**.
-10. Clique manualmente em **Continuar**, revise os dados e aceite os termos fictícios.
-11. Na confirmação humana, digite o código de demonstração `123456` nos seis campos.
+8. Abra a extensão, ajuste os critérios e clique em **Ativar booster**.
+9. Feche o popup e acompanhe o painel lateral: a seleção, o preenchimento e a revisão serão automáticos.
+10. Quando o booster parar na confirmação, digite manualmente o código `123456` nos seis campos.
+11. Confirme a operação fictícia para gerar o comprovante.
 
 ### Etapas reproduzidas
 
 1. acesso a uma conta inteiramente fictícia;
 2. dashboard e saldo simulado;
 3. vitrine de investimentos;
-4. análise, classificação e preenchimento pela extensão;
+4. monitoramento, classificação e seleção automática pela extensão;
 5. validação de valor mínimo, saldo e disponibilidade;
 6. revisão de produto, taxa, prazo, liquidez e valor;
-7. aceite explícito de termos e riscos;
+7. revalidação e avanço automático dos aceites exclusivamente fictícios do simulador;
 8. parada em desafio de segurança humano, com token fictício de seis dígitos;
 9. processamento protegido contra envio repetido;
 10. comprovante e protocolo simulados.
@@ -70,13 +75,18 @@ npm run check
 
 O teste manual do navegador cobre a jornada completa. O arquivo `tests/simulator_smoke.rb` também pode validar o fluxo via Chrome DevTools quando um Chrome headless estiver iniciado com depuração remota na porta `9223`.
 
+O arquivo `tests/booster_smoke.rb` valida especificamente a seleção da melhor oportunidade, preenchimento, avanço automático, parada no token, confirmação manual, queda de taxa e escolha da próxima opção quando um produto fica indisponível.
+
 ## Segurança e limites deliberados
 
 - Somente a aba em que o usuário aciona a extensão fica acessível (`activeTab`).
 - Não há permissão permanente para os domínios do BTG.
 - Não há backend, telemetria ou envio de dados.
 - Senhas, cookies, tokens e dados de sessão não são lidos nem armazenados.
-- A extensão não procura nem aciona botões de continuar, investir ou confirmar; essas ações são manuais até mesmo no simulador.
+- No simulador, a extensão aciona os botões preparatórios e os aceites fictícios até chegar ao token.
+- Fora do simulador, qualquer aceite contratual ou etapa não reconhecida interrompe a automação e exige ação humana.
+- Token, biometria, CAPTCHA e botão de confirmação final nunca são automatizados.
+- O booster possui botão de interrupção e para se os dados da revisão não coincidirem com a oportunidade selecionada.
 - Taxas CDI, IPCA+ e prefixadas são filtradas separadamente por padrão.
 - A extração heurística ainda precisa ser calibrada usando uma amostra autorizada do DOM real.
 

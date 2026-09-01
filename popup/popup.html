@@ -9,9 +9,9 @@
 <body>
   <main>
     <header>
-      <span class="eyebrow">POC assistida</span>
-      <h1>Analisar investimentos</h1>
-      <p>A confirmação da operação permanece sempre no portal e sob controle do usuário.</p>
+      <span class="eyebrow">POC · modo booster</span>
+      <h1>Booster de oportunidades</h1>
+      <p>Monitora, seleciona e prepara automaticamente. Token e confirmação final permanecem com o usuário.</p>
     </header>
 
     <form id="preferences">
@@ -34,12 +34,21 @@
         <label>Taxa mínima (%)<input id="minRate" name="minRate" type="number" min="0" step="0.01" placeholder="Opcional"></label>
         <label>Prazo máximo (dias)<input id="maxMaturityDays" name="maxMaturityDays" type="number" min="1" step="1" placeholder="Opcional"></label>
       </div>
+      <div class="grid">
+        <label>Queda máxima (p.p.)<input id="maxRateDrop" name="maxRateDrop" type="number" min="0" step="0.01" value="0"></label>
+        <label>Varredura (ms)<input id="scanInterval" name="scanInterval" type="number" min="100" step="50" value="250"></label>
+      </div>
       <label>Liquidez
         <select id="liquidity" name="liquidity"><option value="QUALQUER">Qualquer</option><option value="DIARIA">Somente diária</option></select>
       </label>
       <label>Emissores excluídos<input id="excludedIssuers" name="excludedIssuers" type="text" placeholder="Separe por vírgulas"></label>
       <small>* Taxas de indexadores diferentes não são diretamente comparáveis.</small>
-      <button class="analyze" type="submit">Analisar página atual</button>
+      <div class="booster-warning">Ao ativar, a extensão poderá selecionar a oportunidade, preencher o valor e avançar até a etapa de confirmação.</div>
+      <button class="analyze" type="submit">⚡ Ativar booster</button>
+      <div class="button-grid">
+        <button id="analyzeOnce" class="secondary" type="button">Somente analisar</button>
+        <button id="stopBooster" class="danger" type="button" disabled>Interromper</button>
+      </div>
     </form>
     <p id="status" role="status" aria-live="polite"></p>
   </main>

@@ -35,4 +35,16 @@
 #btg-assistant-panel .btg-assistant__primary { border-color: #075aa6; background: #075aa6; color: #fff; }
 #btg-assistant-panel .btg-assistant__notice { position: sticky; bottom: 0; border-top: 1px solid #e8ebf0; background: #fff8dd; font-size: 12px; }
 #btg-assistant-panel .btg-assistant__notice[data-state="success"] { background: #e7f8f0; color: #116443; }
+#btg-assistant-panel.btg-assistant--booster { width: min(370px, calc(100vw - 32px)); }
+#btg-assistant-panel .btg-assistant__pulse { align-self: center; width: 12px; height: 12px; border-radius: 50%; background: #95a0ae; }
+#btg-assistant-panel .btg-assistant__pulse.is-active { background: #3de0a3; box-shadow: 0 0 0 0 rgba(61,224,163,.7); animation: btg-assistant-pulse 1.4s infinite; }
+#btg-assistant-panel .btg-assistant__booster-status { padding: 14px 16px; border-left: 4px solid #6f7b8b; background: #f4f6f8; }
+#btg-assistant-panel .btg-assistant__booster-status[data-state="active"] { border-color: #16835b; background: #ecf9f3; }
+#btg-assistant-panel .btg-assistant__booster-status[data-state="success"] { border-color: #0873c5; background: #eaf5ff; }
+#btg-assistant-panel .btg-assistant__booster-status[data-state="error"] { border-color: #b43830; background: #fff0ef; }
+#btg-assistant-panel .btg-assistant__booster-status strong { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+#btg-assistant-panel .btg-assistant__booster-status p { margin: 5px 0 0; font-size: 13px; }
+#btg-assistant-panel .btg-assistant__locked { margin: 0; padding: 11px 16px; border-top: 1px solid #e2e6ec; color: #4c596b; font-size: 11px; }
+#btg-assistant-panel .btg-assistant__stop { width: calc(100% - 32px); margin: 0 16px 16px; border-color: #d8aaa6; color: #9f342d; }
+@keyframes btg-assistant-pulse { 70% { box-shadow: 0 0 0 9px rgba(61,224,163,0); } 100% { box-shadow: 0 0 0 0 rgba(61,224,163,0); } }
 .btg-assistant-highlight { outline: 4px solid #1683ff !important; outline-offset: 4px !important; }

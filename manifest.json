@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BTG Assistente de Investimentos — POC",
-  "version": "0.1.0",
-  "description": "Lê, classifica e prepara oportunidades de investimento, mantendo a confirmação final com o usuário.",
+  "version": "0.2.0",
+  "description": "Monitora, seleciona e prepara oportunidades automaticamente, mantendo token e confirmação final com o usuário.",
   "permissions": ["activeTab", "scripting", "storage"],
   "action": {
     "default_title": "Analisar investimentos",
