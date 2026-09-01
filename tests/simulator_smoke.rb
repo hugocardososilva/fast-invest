@@ -20,7 +20,16 @@ script = <<~JAVASCRIPT
       element.click();
       await wait();
     };
+    const fillToken = (value) => {
+      document.querySelectorAll('.token-digit').forEach((input, index) => { input.value = value[index] || ''; });
+    };
 
+    if (!document.querySelector('[data-form="login"]')) {
+      const logout = document.querySelector('[data-action="logout"]');
+      assert(logout, 'Não foi possível restaurar o início do simulador');
+      logout.click();
+      await wait();
+    }
     await click('[data-form="login"] button');
     assert(document.body.innerText.includes('Cliente Demonstração'), 'Dashboard não abriu');
     await click('[data-action="open-investments"]');
@@ -35,9 +44,18 @@ script = <<~JAVASCRIPT
     document.querySelector('#terms').click();
     document.querySelector('#risk').click();
     await click('[data-action="go-challenge"]');
-    assert(document.body.innerText.includes('Confirmação humana obrigatória'), 'Limite humano não foi apresentado');
+    assert(document.body.innerText.includes('Confirme com o token'), 'Limite humano não foi apresentado');
 
-    document.querySelector('#challenge-code').value = '123456';
+    assert(document.querySelectorAll('.token-digit').length === 6, 'Entrada de token não possui seis posições');
+    assert(document.querySelector('#token-status').innerText.includes('expira em'), 'Expiração do token não foi exibida');
+    fillToken('000000');
+    document.querySelector('[data-form="challenge"]').requestSubmit();
+    await wait();
+    assert(document.body.innerText.includes('Token inválido'), 'Token inválido não foi rejeitado');
+    assert(document.body.innerText.includes('2 tentativa'), 'Tentativas restantes não foram informadas');
+    await click('[data-action="resend-token"]');
+    assert(document.body.innerText.includes('Novo token fictício enviado'), 'Reenvio do token não foi informado');
+    fillToken('123456');
     document.querySelector('[data-form="challenge"]').requestSubmit();
     await wait(1200);
     assert(document.body.innerText.includes('Simulação concluída'), 'Conclusão não foi apresentada');
@@ -78,7 +96,7 @@ script = <<~JAVASCRIPT
     document.querySelector('#terms').click();
     document.querySelector('#risk').click();
     await click('[data-action="go-challenge"]');
-    document.querySelector('#challenge-code').value = '123456';
+    fillToken('123456');
     document.querySelector('[data-form="challenge"]').requestSubmit();
     await wait(1200);
     assert(document.body.innerText.includes('processamento simulado falhou'), 'Falha de processamento não foi exibida');
@@ -120,6 +138,7 @@ EM.run do
     else
       puts JSON.generate(result["value"])
       exit_code = result.dig("value", "ok") ? 0 : 1
+      warn JSON.pretty_generate(message) unless exit_code.zero?
     end
     socket.close
     EM.stop
