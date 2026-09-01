@@ -11,9 +11,11 @@
   const state = {
     route: "login", balance: 50000, scenario: "success", selectedId: null,
     amount: 0, acceptedTerms: false, acceptedRisk: false, error: "",
-    processing: false, receipt: null
+    processing: false, receipt: null, tokenExpiresAt: null, tokenAttempts: 0,
+    tokenLockedUntil: null, tokenResends: 0
   };
   const app = document.getElementById("app");
+  let tokenClock = null;
 
   function money(value) {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -143,17 +145,26 @@
 
   function challengeView() {
     const selected = selectedProduct();
+    const locked = tokenLockSeconds() > 0;
     return shell(`
       ${steps(2)}
       <section class="flow-card">
-        <h1>Confirmação humana obrigatória</h1><p>A extensão deve parar antes desta etapa. Neste simulador, o código representa token, biometria ou outro desafio antifraude.</p>
+        <h1>Confirme com o token</h1><p>A extensão para nesta etapa. O token deve ser digitado manualmente pelo cliente para autorizar a aplicação fictícia.</p>
         ${state.error ? `<div class="alert error">${escapeHtml(state.error)}</div>` : ""}
         <div class="alert"><strong>Aplicação fictícia:</strong> ${money(state.amount)} em ${escapeHtml(selected.title)}.</div>
         <form class="challenge" data-form="challenge">
-          <label class="field">Código de demonstração<input id="challenge-code" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="000000"></label>
-          <p class="challenge-hint">Para testar, utilize <strong>123456</strong>.</p>
-          <button class="button primary full" type="submit" ${state.processing ? "disabled" : ""}>${state.processing ? "Processando…" : "Confirmar aplicação simulada"}</button>
+          <div class="token-device"><span>Token enviado para o dispositivo fictício</span><strong>•••• 0199</strong></div>
+          <fieldset class="token-fieldset" ${state.processing || locked ? "disabled" : ""}>
+            <legend>Digite os seis números</legend>
+            <div class="token-inputs" id="challenge-code" aria-label="Código de token">
+              ${Array.from({ length: 6 }, (_, index) => `<input class="token-digit" data-token-index="${index}" inputmode="numeric" pattern="[0-9]" maxlength="1" autocomplete="one-time-code" aria-label="Dígito ${index + 1} do token">`).join("")}
+            </div>
+          </fieldset>
+          <p class="challenge-hint">Código desta POC: <strong>123456</strong> · <span id="token-status"></span></p>
+          <button class="token-resend" type="button" data-action="resend-token" ${state.processing || locked ? "disabled" : ""}>Reenviar token fictício</button>
+          <button class="button primary full" type="submit" ${state.processing || locked ? "disabled" : ""}>${state.processing ? "Validando token e processando…" : locked ? "Aguarde o desbloqueio" : "Validar token e confirmar"}</button>
         </form>
+        <p class="security-note">🔒 O código é validado apenas neste simulador e não é enviado nem armazenado.</p>
         <div class="button-row"><button class="button" data-action="back-review">Voltar à revisão</button></div>
       </section>`);
   }
@@ -178,6 +189,52 @@
     const views = { login: loginView, dashboard: dashboardView, investments: investmentsView, review: reviewView, challenge: challengeView, success: successView };
     app.innerHTML = views[state.route]();
     window.scrollTo({ top: 0, behavior: "auto" });
+    manageTokenClock();
+  }
+
+  function tokenSeconds() {
+    return Math.max(0, Math.ceil(((state.tokenExpiresAt || 0) - Date.now()) / 1000));
+  }
+
+  function tokenLockSeconds() {
+    return Math.max(0, Math.ceil(((state.tokenLockedUntil || 0) - Date.now()) / 1000));
+  }
+
+  function issueToken() {
+    state.tokenExpiresAt = Date.now() + 60000;
+    state.tokenAttempts = 0;
+    state.tokenLockedUntil = null;
+    state.error = "";
+  }
+
+  function updateTokenStatus() {
+    const status = document.getElementById("token-status");
+    if (!status) return;
+    const lockSeconds = tokenLockSeconds();
+    const seconds = tokenSeconds();
+    status.textContent = lockSeconds > 0
+      ? `bloqueado por ${lockSeconds}s após três tentativas`
+      : seconds > 0 ? `expira em 00:${String(seconds).padStart(2, "0")}` : "token expirado";
+    status.classList.toggle("is-expired", seconds === 0 || lockSeconds > 0);
+
+    if (lockSeconds === 0 && state.tokenLockedUntil) {
+      state.tokenLockedUntil = null;
+      issueToken();
+      render();
+    }
+  }
+
+  function manageTokenClock() {
+    if (tokenClock) window.clearInterval(tokenClock);
+    tokenClock = null;
+    if (state.route !== "challenge") return;
+    updateTokenStatus();
+    tokenClock = window.setInterval(updateTokenStatus, 1000);
+    window.setTimeout(() => document.querySelector(".token-digit")?.focus(), 0);
+  }
+
+  function enteredToken() {
+    return Array.from(document.querySelectorAll(".token-digit")).map((input) => input.value).join("");
   }
 
   function toast(message) {
@@ -207,9 +264,27 @@
     if (event.target.dataset.form === "login") { state.route = "dashboard"; render(); return; }
     if (event.target.dataset.form !== "challenge" || state.processing) return;
 
-    const code = document.getElementById("challenge-code").value;
+    if (tokenLockSeconds() > 0) return;
+    if (tokenSeconds() === 0) {
+      state.error = "O token expirou. Solicite um novo código para continuar.";
+      render();
+      return;
+    }
+    const code = enteredToken();
+    if (code.length !== 6) {
+      state.error = "Digite os seis números do token.";
+      render();
+      return;
+    }
     if (code !== "123456") {
-      state.error = "Código inválido. Use 123456 para concluir a demonstração.";
+      state.tokenAttempts += 1;
+      const remaining = 3 - state.tokenAttempts;
+      if (remaining <= 0) {
+        state.tokenLockedUntil = Date.now() + 15000;
+        state.error = "Três tentativas inválidas. A validação foi bloqueada temporariamente.";
+      } else {
+        state.error = `Token inválido. Você ainda tem ${remaining} tentativa(s).`;
+      }
       render();
       return;
     }
@@ -242,8 +317,14 @@
     if (action === "back-products") { state.error = ""; state.route = "investments"; render(); }
     if (action === "back-review") { state.error = ""; state.route = "review"; render(); }
     if (action === "new-simulation") {
-      Object.assign(state, { route: "investments", selectedId: null, amount: 0, acceptedTerms: false, acceptedRisk: false, error: "", receipt: null, processing: false });
+      Object.assign(state, { route: "investments", selectedId: null, amount: 0, acceptedTerms: false, acceptedRisk: false, error: "", receipt: null, processing: false, tokenExpiresAt: null, tokenAttempts: 0, tokenLockedUntil: null, tokenResends: 0 });
       render();
+    }
+    if (action === "resend-token") {
+      state.tokenResends += 1;
+      issueToken();
+      render();
+      toast(`Novo token fictício enviado (${state.tokenResends} reenvio${state.tokenResends === 1 ? "" : "s"}).`);
     }
     if (action === "select-product") {
       const selected = effectiveProduct(PRODUCTS.find((item) => item.id === button.dataset.productId));
@@ -261,8 +342,29 @@
       if (!state.acceptedTerms || !state.acceptedRisk) { state.error = "Aceite os dois itens para prosseguir."; render(); return; }
       state.error = "";
       state.route = "challenge";
+      issueToken();
       render();
     }
+  });
+
+  app.addEventListener("input", (event) => {
+    if (!event.target.classList.contains("token-digit")) return;
+    event.target.value = event.target.value.replace(/\D/g, "").slice(-1);
+    if (event.target.value) event.target.nextElementSibling?.focus();
+  });
+
+  app.addEventListener("keydown", (event) => {
+    if (!event.target.classList.contains("token-digit")) return;
+    if (event.key === "Backspace" && !event.target.value) event.target.previousElementSibling?.focus();
+  });
+
+  app.addEventListener("paste", (event) => {
+    if (!event.target.classList.contains("token-digit")) return;
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!digits) return;
+    event.preventDefault();
+    document.querySelectorAll(".token-digit").forEach((input, index) => { input.value = digits[index] || ""; });
+    document.querySelector(`.token-digit[data-token-index="${Math.min(digits.length, 6) - 1}"]`)?.focus();
   });
 
   render();

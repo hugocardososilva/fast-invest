@@ -30,7 +30,7 @@ Extensão Chromium Manifest V3 para demonstrar um fluxo de automação assistida
 8. Abra a extensão, ajuste os critérios e clique em **Analisar página atual**.
 9. No painel lateral, use **Destacar** ou **Preparar aplicação**.
 10. Clique manualmente em **Continuar**, revise os dados e aceite os termos fictícios.
-11. Na confirmação humana, use o código de demonstração `123456`.
+11. Na confirmação humana, digite o código de demonstração `123456` nos seis campos.
 
 ### Etapas reproduzidas
 
@@ -41,7 +41,7 @@ Extensão Chromium Manifest V3 para demonstrar um fluxo de automação assistida
 5. validação de valor mínimo, saldo e disponibilidade;
 6. revisão de produto, taxa, prazo, liquidez e valor;
 7. aceite explícito de termos e riscos;
-8. parada em desafio de segurança humano;
+8. parada em desafio de segurança humano, com token fictício de seis dígitos;
 9. processamento protegido contra envio repetido;
 10. comprovante e protocolo simulados.
 
@@ -52,6 +52,10 @@ Extensão Chromium Manifest V3 para demonstrar um fluxo de automação assistida
 - produto indisponível;
 - saldo insuficiente;
 - falha durante o processamento, sem gerar comprovante.
+
+### Token de demonstração
+
+A etapa de segurança simula o envio para um dispositivo mascarado, código com seis posições, validade de 60 segundos, reenvio e contagem de tentativas. Depois de três códigos inválidos, a validação fica bloqueada por 15 segundos. O único token válido é `123456`; ele existe apenas no navegador e nunca é enviado para um serviço externo.
 
 O servidor local é usado porque navegadores restringem extensões em páginas `file://` por padrão.
 
